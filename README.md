@@ -27,3 +27,6 @@ This repo is for Python scripts for *"Capturing urban diversity through language
 | 14 | [plot_weighted_divs_est_som_87-19.py](plot_weighted_divs_est_som_87-19.py) | Plots Figure 4 | Output from Step 2| Geopackage with stability classficiations |
 | 15 | [calculate_spatial_markov.py](calculate_spatial_markov.py) | Calculate and plot Markov chain matrices | Output from Step 5 | PDF matrices (Figure 6) and matrices as pickled dataframes |
 | 16 | [compare_markov.py](compare_markov.py) | Compares Markov probability matrices with Jensen-Shannon distances | Outputs Figure 7 | PNG file |
+
+### Other information
+Some of these scripts have not been formatted to be flexibly used on all computers. You might have to alter some hard-coded filepaths.
