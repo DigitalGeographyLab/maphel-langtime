@@ -6,6 +6,17 @@ Created on Mon Sep 12 12:49:05 2022
 """
 import pandas as pd
 import gc
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. This script assumes you have access to FOLK data within Fiona")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # file path list
 tkt_paths = ["D:\\ready-made\\FOLK_tkt_8800a\\folk_19872000_tua_tkt21tot_1.dta",
@@ -88,7 +99,7 @@ for path in tkt_paths:
     print('[INFO] - Saving FOLK tkt data for ' + str(curyear) + 'e...')
     
     # save
-    data.to_csv('W:\\FOLK\\csv\\FOLK_tkt_data_' + str(curyear) + '.csv',
+    data.to_csv(args['output'] + 'FOLK_tkt_data_' + str(curyear) + '.csv',
                 sep=',', encoding='utf-8')
     
     # release memory
@@ -129,7 +140,7 @@ for path in ask_paths:
             print('[INFO] - Saving FOLK data for ' + str(prevyear) + '...')
             
             # save the full annual data
-            data.to_csv('W:\\FOLK\csv\\FOLK_askun_data_' + str(prevyear) + '.csv',
+            data.to_csv(args['output'] + 'FOLK_askun_data_' + str(prevyear) + '.csv',
                         sep=',', encoding='utf-8')
             
             # print indication message
@@ -163,7 +174,7 @@ for path in ask_paths:
     print('[INFO] - Saving FOLK data for ' + str(curyear) + 'e...')
     
     # save
-    data.to_csv('W:\\FOLK\\csv\\FOLK_askun_data_' + str(curyear) + '.csv',
+    data.to_csv(args['output'] + 'FOLK_askun_data_' + str(curyear) + '.csv',
                 sep=',', encoding='utf-8')
     
     # release memory

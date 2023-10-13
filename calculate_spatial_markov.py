@@ -13,6 +13,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from esda.moran import Moran
 import seaborn as sns
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get path to input folder
+ap.add_argument("-i", "--input", required=True,
+                help="Path to input folder with grid histories as geopackages. For example: /path/to/folder/")
+
+# Get path to output folder
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # list of files to loop over for normalized values
 flist = ['shannon', 'unique_langs', 'finpop', 'swepop',
@@ -40,7 +55,7 @@ for j, file in enumerate(flist):
     print('[INFO] - Reading in {}...'.format(file))
     
     # read data in
-    df = gpd.read_file('W:\\maphel_langtime\\geopackage\\{}_grid_history.gpkg'.format(file))
+    df = gpd.read_file(args['input'] + '{}_grid_history.gpkg'.format(file))
     
     # get initial spatial weight matrix for the grid KNN=8
     print('[INFO] - Calculating initial KNN-8 weights matrix for Global Moran'\
@@ -67,7 +82,7 @@ for j, file in enumerate(flist):
     ax.plot(yrs, res[:,1] - 1.96 * res[:,2], label='Lower bound', linestyle='dashed')
     ax.set_title("Global Moran's I: " + tlist[j])
     ax.legend()
-    plt.savefig(r'W:\maphel_langtime\plots\global_moran_{}.pdf'.format(file),
+    plt.savefig(args['output'] + 'global_moran_{}.pdf'.format(file),
                 dpi=300, bbox_inches='tight')
     
     # get array of data
@@ -183,7 +198,7 @@ for j, file in enumerate(flist):
     g = sns.lineplot(data=cdf, x='year', y='bins', hue='class', palette='muted',
                      ax=ax[1])
     ax[1].set_title('Class bin boundaries')
-    plt.savefig(r'W:\maphel_langtime\plots\class_distribution_{}_natbre_k{}.pdf'.format(file,k),
+    plt.savefig(args['output'] + 'class_distribution_{}_natbre_k{}.pdf'.format(file,k),
                 dpi=300, bbox_inches='tight')
     
     # get a markov chain object based on quintiles
@@ -205,11 +220,11 @@ for j, file in enumerate(flist):
 
     # get global probability matrix as pandas dataframe
     tdf = pd.DataFrame(m5.p, columns=names, index=names)
-    tdf.to_pickle(r'W:\maphel_langtime\pickles\markov_probs_{}_natbre_k{}.pkl'.format(file,k))
+    tdf.to_pickle(args['output'] + 'markov_probs_{}_natbre_k{}.pkl'.format(file,k))
     
     # get mean first passages as dataframe
     mfpt_df = pd.DataFrame(avgs, columns=names, index=names)
-    mfpt_df.to_pickle(r'W:\maphel_langtime\pickles\markov_mfpt_{}_natbre_k{}.pkl'.format(file,k))
+    mfpt_df.to_pickle(args['output'] + 'markov_mfpt_{}_natbre_k{}.pkl'.format(file,k))
     
     # get spatial weight matrix for the grid KNN=8
     print('[INFO] - Calculating spatial Markov with KNN 8 weights matrix'\
@@ -235,7 +250,7 @@ for j, file in enumerate(flist):
         pmdf = pd.DataFrame(pm, columns=names, index=names)
         
         # save to pickle
-        pmdf.to_pickle(r'W:\maphel_langtime\pickles\markov_SL_{}_natbre_probs_{}_k{}.pkl'.format(sl,file,k))
+        pmdf.to_pickle(args['output'] + 'markov_SL_{}_natbre_probs_{}_k{}.pkl'.format(sl,file,k))
         
     
     # get statistical tests
@@ -318,7 +333,7 @@ for j, file in enumerate(flist):
             else:
                 pass
     plt.figtext(0.34, 0.057, report, ha='left', fontsize=9)
-    plt.savefig(r'W:\maphel_langtime\plots\spatial_markov_{}_natbre_k{}.pdf'.format(file,k),
+    plt.savefig(args['output'] + 'spatial_markov_{}_natbre_k{}.pdf'.format(file,k),
                 dpi=300, bbox_inches='tight')
     
 

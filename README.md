@@ -11,8 +11,8 @@ This repo is for Python scripts for *"Capturing urban diversity through language
 
 | Step | Script | Description | Input | Output |
 | ---- | :----- | :---------- | :---- | :----- |
-| 1 | [add_langfam_genus.py](add_langfam_genus.py) | Adds information on the family and genus per each language | First language information per individual in a CSV file | Language family and genus information per individual |
-| 2 | [calculate_langfam_diversity.py](calculate_langfam_diversity.py) | Calculates diversity of language families per grid cell | Output from Step 1 | Geopackages |
+| 1 | [calculate_langfam_diversity.py](calculate_langfam_diversity.py) | Calculates diversity of language families per grid cell | Output from Step 1 | Geopackages |
+| 2 | [add_langfam_genus.py](add_langfam_genus.py) | Adds information on the family and genus per each language | First language information per individual in a CSV file | Language family and genus information per individual |
 | 3 | [calculate_speakers.py](calculate_speakers.py) | Calculates the number of speakers per a grid cell across the language groups used in the article | First language information per individual in a CSV file | Geopackage |
 | 4 | [calculate_language_changes.py](calculate_language_changes.py) | Calculates how many times individuals have changed their language | First language information per individual in a CSV file | Pickled dataframe on changes |
 | 5 | [HMA_overall_diversityplot.py](HMA_overall_diversityplot.py) | Plots subplots in Figure 1 and full Figure 2 | Individual-level data from Statistics Finland | PDF Figures |

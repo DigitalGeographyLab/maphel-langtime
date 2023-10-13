@@ -12,13 +12,35 @@ import numpy as np
 import gc
 from matplotlib import pyplot as plt
 import seaborn as sns
+import argparse
 
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get path to input file
+ap.add_argument("-g", "--grid", required=True,
+                help="Path to geopackage file containing 250 m grid covering the HMA.")
+
+# Get path to input file
+ap.add_argument("-lg", "--langgrid", required=True,
+                help="Path to folder containing CSVs with first language information and individual unique ids")
+
+# Get path to input file
+ap.add_argument("-hg", "--homegrid", required=True,
+                help="Path to folder containing CSVs with home locations and individual unique ids")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. The files will be named: 'HMA_individuals_lang_[YEAR]_250m.pkl' and 'HMA_individuals_lang_changes_1987-2019.pkl'")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # set seaborn style
 sns.set()
 
 # read hma grid data in
-hma = gpd.read_file('W:\\grid\\250m_HMA_accurate.gpkg')
+hma = gpd.read_file(args['grid'])
 
 # convert grid id to integer
 hma['NRO'] = hma['NRO'].astype(int)
@@ -36,9 +58,9 @@ for i in range(1987, 2020):
     print('[INFO] - Processing year ' + str(i))
     
     # read data for year
-    langs = pd.read_csv('W:\\language\\harmonized\\{}_mothertongues.csv'.format(i),
+    langs = pd.read_csv(args['langgrid'] + '{}_mothertongues.csv'.format(i),
                         sep=',', encoding='utf-8')
-    homes = pd.read_csv('D:\\e01\\custom-made\\henkilo_paikkatiedot_{}.csv'.format(i),
+    homes = pd.read_csv(args['homegrid'] + 'henkilo_paikkatiedot_{}.csv'.format(i),
                         sep=',', encoding='utf-8')
     
     # drop individuals without home grid id
@@ -58,7 +80,7 @@ for i in range(1987, 2020):
     langs['year'] = i
     
     # save to disk
-    langs.to_pickle('W:\\language\\HMA\\HMA_individuals_lang_{}_250m.pkl'.format(str(i)))
+    langs.to_pickle(args['output'] + 'HMA_individuals_lang_{}_250m.pkl'.format(str(i)))
     
     # get column new column name
     colname = 'lang' + str(i)
@@ -121,7 +143,7 @@ for i, row in langhistory.iterrows():
         pass
 
 # save resulting dataframe
-result.to_pickle('W:\\language\\HMA\\HMA_individuals_lang_changes_1987-2019.pkl')
+result.to_pickle(args['output'] + 'HMA_individuals_lang_changes_1987-2019.pkl')
 
 print('[INFO] - Results saved to pickle!')
 

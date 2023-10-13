@@ -9,6 +9,32 @@ from collections import Counter
 import skbio.diversity.alpha as sk
 import numpy as np
 import gc
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get path to input file
+ap.add_argument("-fam", "--family", required=True,
+                help="Path to csv with mappings between language family and languages from Ethnologue")
+
+ap.add_argument("-w", "--wals", required=True,
+                help="Path to csv with mappings between language family and languages from WALS")
+
+# Get path to input file
+ap.add_argument("-lg", "--langgrid", required=True,
+                help="Path to folder containing CSVs with first language information and individual unique ids")
+
+# Get path to input file
+ap.add_argument("-hg", "--homegrid", required=True,
+                help="Path to folder containing CSVs with home locations and individual unique ids")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. The files will be named: '[YEAR]_langfam_diversity_euref250.pkl'")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # function to count languages in grid and return list of counts
 def langcount(langlist):
@@ -16,8 +42,8 @@ def langcount(langlist):
     return list(count.values())
 
 # read file with mappings between languages and language families
-df = pd.read_csv(r'W:\langfamily_mappings.csv')
-wals = pd.read_csv(r'W:\wals_languages.csv')
+df = pd.read_csv(args['family'])
+wals = pd.read_csv(args['wals'])
 
 # simplify data structure by dropping NaN's
 df = df.dropna(subset=['alpha2'])
@@ -43,9 +69,9 @@ for i in range(1987,2020):
     yr = i
     
     # create year-specific filepaths
-    lpath = 'W:\\language\\harmonized\\' + str(yr) + '_mothertongues.csv'
-    gpath = 'D:\\e01\\custom-made\\henkilo_paikkatiedot_' + str(yr) +'.csv'
-    outpath = 'W:\\language\\spatial\\pickles\\250m\\harmonized\\' + str(yr) + '_langfam_diversity_euref250.pkl'
+    lpath = args['langgrid'] + str(yr) + '_mothertongues.csv'
+    gpath = args['homegrid'] + 'henkilo_paikkatiedot_' + str(yr) +'.csv'
+    outpath = args['outpath'] + str(yr) + '_langfam_diversity_euref250.pkl'
     
     # read annual datasets in
     print('[INFO] - Processing year ' + str(yr) + '...')
@@ -104,10 +130,8 @@ for i in range(1987,2020):
     del data
     gc.collect()
 
-# save count dataframes
-famdf.to_pickle(r'W:\maphel_langtime\pickles\langfam_counts_87-19.pkl')
-gendf.to_pickle(r'W:\maphel_langtime\pickles\langgen_counts_87-19.pkl')
 
+# plot counts for language families and languages geni across the years
 # pivot count datafrmaes
 famdf = famdf.stack().reset_index().rename(columns={'level_0':'family','level_1':'year',0:'count'})
 gendf = gendf.stack().reset_index().rename(columns={'level_0':'Family','level_1':'year',0:'count'})
@@ -121,7 +145,7 @@ sns.set(style='whitegrid')
 sns.lineplot(data=famdf, x='year', y='count', hue='family', palette='colorblind').set(yscale='log')
 plt.xticks(rotation=45)
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
-plt.savefig(r'W:\maphel_langtime\langfam_counts_87-19.pdf')
+plt.savefig(args['outpath'] +'langfam_counts_87-19.pdf')
 
 
 plt.figure(figsize=(15,8))
@@ -129,4 +153,4 @@ sns.set(style='whitegrid')
 sns.lineplot(data=gendf, x='year', y='count', hue='genus', palette='colorblind').set(yscale='log')
 plt.xticks(rotation=45)
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
-plt.savefig(r'W:\maphel_langtime\langgen_counts_87-19.pdf')
+plt.savefig(args['outpath'] + 'langgen_counts_87-19.pdf')

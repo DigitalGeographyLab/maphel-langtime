@@ -8,12 +8,39 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import argparse as ap
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get grid file
+ap.add_argument("-sp", "--shannonpop", required=True,
+                help="Path to file containing population-weighted Shannon entropies in neighbourhoods")
+
+# Get path to input file
+ap.add_argument("-up", "--uniquepop", required=True,
+                help="Path to file containing population-weighted unique languages in neighbourhoods")
+
+# Get path to input file
+ap.add_argument("-sn", "--shannorm", required=True,
+                help="Path to file with normalized Shannon entropies in neighbourhoods")
+
+# Get path to input file
+ap.add_argument("-un", "--uniquenorm", required=True,
+                help="Path to file with normalized unique language counts in neighbourhoods")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. This script assumes you have access to FOLK data within Fiona")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # read data in
-shannorm = pd.read_pickle(r'W:\maphel_langtime\pickles\new_old_neighbourhoods_norm_shannon.pkl')
-uniqnorm = pd.read_pickle(r'W:\maphel_langtime\pickles\new_old_neighbourhoods_norm_unique_langs.pkl')
-shanpopw = pd.read_pickle(r'W:\maphel_langtime\pickles\new_old_neighbourhoods_popweigh_shannon.pkl')
-uniqpopw = pd.read_pickle(r'W:\maphel_langtime\pickles\new_old_neighbourhoods_popweigh_unique_langs.pkl')
+shannorm = pd.read_pickle(args['shannorm'])
+uniqnorm = pd.read_pickle(args['uniquenorm'])
+shanpopw = pd.read_pickle(args['shannonpop'])
+uniqpopw = pd.read_pickle(args['uniquepop'])
 
 # drop neighbourhoods where population groups have left
 shanpopw = shanpopw[shanpopw['celltype'] != 'Ceased']
@@ -64,4 +91,4 @@ g.set(xlabel='', ylabel='Normalized Shannon entropy')
 g.set_title('d.', loc='left', fontsize=15)
 
 # save the figure
-plt.savefig(r'W:\maphel_langtime\plots\figure5_grid_new_old_trajectories.pdf', dpi=300, bbox_inches='tight')
+plt.savefig(args['output'] + 'figure5_grid_new_old_trajectories.pdf', dpi=300, bbox_inches='tight')

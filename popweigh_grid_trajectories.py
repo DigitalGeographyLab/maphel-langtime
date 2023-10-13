@@ -9,6 +9,37 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import argparse as ap
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get grid file
+ap.add_argument("-dg", "--divgrid", required=True,
+                help="Path to folder containing grid diversity history files. For example: /path/to/folder/")
+
+# Get path to input file
+ap.add_argument("-sg", "--somagrid", required=True,
+                help="Path to geopackage with grid history of Somali population count")
+
+# Get path to input file
+ap.add_argument("-eg", "--estogrid", required=True,
+                help="Path to geopackage with grid history of Estonian population count")
+
+# Get path to input file
+ap.add_argument("-fg", "--fingrid", required=True,
+                help="Path to geopackage with grid history of Finnish population count")
+
+# Get path to input file
+ap.add_argument("-hg", "--hmagrid", required=True,
+                help="Path to geopackage with grid history of total population count")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. This script assumes you have access to FOLK data within Fiona")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 def get_cell_trajectories(dataframe):
     
@@ -66,35 +97,24 @@ labs = ['Unique languages','Shannon entropy']
 for x, file in enumerate(['unique_langs','shannon']):
 
     # read grid history files in
-    df = gpd.read_file('W:\\maphel_langtime\\geopackage\\{}_grid_history.gpkg'.format(file))
-    sdf = gpd.read_file('W:\\maphel_langtime\\geopackage\\sompop_grid_history.gpkg')
-    edf = gpd.read_file('W:\\maphel_langtime\\geopackage\\estpop_grid_history.gpkg')
-    hma = gpd.read_file('W:\\maphel_langtime\\geopackage\\pop_count_grid_history.gpkg')
-    #finswe = gpd.read_file('W:\\maphel_langtime\\geopackage\\finswe_pop_grid_history.gpkg')
-    fin = gpd.read_file('W:\\maphel_langtime\\geopackage\\finpop_grid_history.gpkg')
-    #swe = gpd.read_file('W:\\maphel_langtime\\geopackage\\swe_pop_grid_history.gpkg')
-    #foreign = gpd.read_file('W:\\maphel_langtime\\geopackage\\foreign_pop_grid_history.gpkg')
+    df = gpd.read_file(args['divgrid'] + '{}_grid_history.gpkg'.format(file))
+    sdf = gpd.read_file(args['somagrid'])
+    edf = gpd.read_file(args['estogrid'])
+    hma = gpd.read_file(args['hmagrid'])
+    fin = gpd.read_file(args['fingrid'])
     
     # set somali annual range to start from 1992 to ensure enough observations
     sdf = sdf.drop(columns=['1987','1988','1989','1990','1991',])
-    #edf = edf.drop(columns=['1987','1988','1989'])
-    
     # drop all rows that have only zero observations throughout
     # to remove cells without any somali or estonian speaking inhabitants
     sdf = sdf.drop_duplicates(subset=list(sdf.columns[1:29]), keep=False)
     edf = edf.drop_duplicates(subset=list(edf.columns[1:34]), keep=False)
     fdf = fin.drop_duplicates(subset=list(fin.columns[1:34]), keep=False)
-    #swe = swe.drop_duplicates(subset=list(swe.columns[1:31]), keep=False)
-    #finswe = finswe.drop_duplicates(subset=list(finswe.columns[1:31]), keep=False)
-    #foreign = foreign.drop_duplicates(subset=list(finswe.columns[1:31]), keep=False)
     
     # replace zeros with nans for population count dataframes
     edf = edf.replace(0, np.nan)
     sdf = sdf.replace(0, np.nan)
     fdf = fdf.replace(0, np.nan)
-    #swe = swe.replace(0, np.nan)
-    #finswe = finswe.replace(0, np.nan)
-    #foreign = foreign.replace(0, np.nan)
     
     # get dataframe triplets
     hma_ey, hma_new, hma_old = get_cell_trajectories(hma)
@@ -181,7 +201,7 @@ for x, file in enumerate(['unique_langs','shannon']):
     
     # concatenate dataframes
     result = pd.concat(resultlist)
-    result.to_pickle(r'W:\maphel_langtime\pickles\new_old_neighbourhoods_popweigh_{}.pkl'.format(file))
+    result.to_pickle(args['output'] + 'new_old_neighbourhoods_popweigh_{}.pkl'.format(file))
 
     
     # drop rows with ceased
@@ -208,12 +228,12 @@ for x, file in enumerate(['unique_langs','shannon']):
     else:
         handles = ax.get_legend().legendHandles
         ax.get_legend().remove()
-    plt.savefig(r'W:\maphel_langtime\plots\grid_trajectory_popweigh_{}.pdf'.format(file), dpi=300,
+    plt.savefig(args['output'] + 'grid_trajectory_popweigh_{}.pdf'.format(file), dpi=300,
                 bbox_inches='tight')
 
 # concatenate the outputs into a dataframe
 output = pd.concat(outputlist, ignore_index=True)
 
 # save dataframe
-output.to_pickle(r'W:\maphel_langtime\pickles\popweigh_divs_gridtypes.pkl')
-output.to_csv(r'W:\maphel_langtime\pickles\popweigh_divs_gridtypes.csv', sep=';',encoding='utf-8')
+output.to_pickle(args['output'] + 'popweigh_divs_gridtypes.pkl')
+output.to_csv(args['output'] + 'popweigh_divs_gridtypes.csv', sep=';',encoding='utf-8')

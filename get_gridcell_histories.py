@@ -6,9 +6,28 @@ Created on Wed Sep 28 12:48:39 2022
 """
 import pandas as pd
 import geopandas as gpd
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get path to input file
+ap.add_argument("-d", "--diversity", required=True,
+                help="Path to folder containing geopackages with diversity metrics calculated. Files should be named 'HMA_langs_famgen_div_[YEAR].gpkg'")
+
+# Get path to input file
+ap.add_argument("-g", "--grid", required=True,
+                help="Path to folder containing grid geopackage.")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. The files are called 'HMA_langs_fam_div_[YEAR].gpkg'")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # open empty HMA 250 meter grid
-grid = gpd.read_file('W:\\grid\\250m_HMA_accurate.gpkg')
+grid = gpd.read_file(args['grid'] + '250m_HMA_accurate.gpkg')
 
 # set grid id as integer
 grid['euref_250'] = grid['NRO'].astype(int)
@@ -28,7 +47,7 @@ for col in ['sompop','estpop','shannon','unique_langs', 'pop_count',
         print('[INFO] - Processing {} data for year {}...'.format(col, str(i)))
     
         # read data
-        df = gpd.read_file(r'W:\maphel_langtime\geopackage\HMA_langs_famgen_div_{}.gpkg'.format(i))
+        df = gpd.read_file(args['diversity'] + 'HMA_langs_famgen_div_{}.gpkg'.format(i))
         
         # drop uninhabited rows
         df = df[df['pop_count'] >= 1]
@@ -61,7 +80,7 @@ for col in ['sompop','estpop','shannon','unique_langs', 'pop_count',
     print('[INFO] - Saving {} column data from 1987 to 2019...'.format(col))
     
     # save to gpkg
-    data.to_file('W:\\maphel_langtime\\geopackage\\{}_grid_history.gpkg'.format(col),
+    data.to_file(args['output'] + '{}_grid_history.gpkg'.format(col),
                  driver='GPKG')
 
 # Normalized values
@@ -77,7 +96,7 @@ for col in ['sompop','estpop','shannon', 'unique_langs', 'pop_count', 'finpop',
         print('[INFO] - Processing {} data for year {}...'.format(col, str(i)))
     
         # read data
-        df = gpd.read_file(r'W:\maphel_langtime\geopackage\HMA_langs_famgen_div_{}.gpkg'.format(i))
+        df = gpd.read_file(args['diversity'] + 'HMA_langs_famgen_div_{}.gpkg'.format(i))
         
         # drop uninhabited rows
         df = df[df['pop_count'] >= 1]
@@ -113,18 +132,8 @@ for col in ['sompop','estpop','shannon', 'unique_langs', 'pop_count', 'finpop',
     print('[INFO] - Saving {} column data from 1987 to 2019...'.format(col))
     
     # save to gpkg
-    data.to_file('W:\\maphel_langtime\\geopackage\\norm_{}_grid_history.gpkg'.format(col),
+    data.to_file(args['output'] + 'norm_{}_grid_history.gpkg'.format(col),
                  driver='GPKG')
 
 # print message
 print('[INFO] - ... done!')
-
-# get diversities per population group residential neighbourhoods
-shannon = gpd.read_file('W:\\maphel_langtime\\geopackage\\shannon_grid_history.gpkg')
-somali = gpd.read_file('W:\\maphel_langtime\\geopackage\\sompop_grid_history.gpkg')
-estoni = gpd.read_file('W:\\maphel_langtime\\geopackage\\estpop_grid_history.gpkg')
-finswe = gpd.read_file('W:\\maphel_langtime\\geopackage\\finswe_pop_grid_history.gpkg')
-forgn = gpd.read_file('W:\\maphel_langtime\\geopackage\\foreign_pop_grid_history.gpkg')
-
-# get cells withn population group members
-somali = somali.dropna(subset=list(somali.columns[1:34]))

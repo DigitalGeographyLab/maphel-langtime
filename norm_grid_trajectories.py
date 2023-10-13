@@ -9,6 +9,33 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get grid file
+ap.add_argument("-g", "--grid", required=True,
+                help="Path to folder containing grid history files. For example: /path/to/folder/")
+
+# Get path to input file
+ap.add_argument("-sg", "--somagrid", required=True,
+                help="Path to folder containing geopackages with diversity metrics calculated. Files should be named 'HMA_langs_famgen_div_[YEAR].gpkg'")
+
+# Get path to input file
+ap.add_argument("-eg", "--estogrid", required=True,
+                help="Path to folder containing geopackages with diversity metrics calculated. Files should be named 'HMA_langs_famgen_div_[YEAR].gpkg'")
+
+# Get path to input file
+ap.add_argument("-fg", "--fingrid", required=True,
+                help="Path to folder containing CSVs about commutes.")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. This script assumes you have access to FOLK data within Fiona")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 def get_cell_trajectories(dataframe):
     
@@ -29,10 +56,10 @@ def get_cell_trajectories(dataframe):
 for file in ['shannon', 'unique_langs']:
 
     # read grid history files in
-    df = gpd.read_file('W:\\maphel_langtime\\geopackage\\norm_{}_grid_history.gpkg'.format(file))
-    sdf = gpd.read_file('W:\\maphel_langtime\\geopackage\\sompop_grid_history.gpkg')
-    edf = gpd.read_file('W:\\maphel_langtime\\geopackage\\estpop_grid_history.gpkg')
-    fdf = gpd.read_file('w:\\maphel_langtime\\geopackage\\finpop_grid_history.gpkg')
+    df = gpd.read_file(args['grid'] + 'norm_{}_grid_history.gpkg'.format(file))
+    sdf = gpd.read_file(args['somagrid'] + 'sompop_grid_history.gpkg')
+    edf = gpd.read_file(args['estogrid'] + 'estpop_grid_history.gpkg')
+    fdf = gpd.read_file(args['fingrid'] + 'finpop_grid_history.gpkg')
 
     # set somali annual range to start from 1992 to ensure enough observations
     sdf = sdf.drop(columns=['1987','1988','1989','1990','1991'])
@@ -233,7 +260,7 @@ for file in ['shannon', 'unique_langs']:
 
     # concatenate dataframes
     result = pd.concat(yeardfs)
-    result.to_pickle(r'W:\maphel_langtime\pickles\new_old_neighbourhoods_norm_{}.pkl'.format(file))
+    result.to_pickle(args['output'] + 'new_old_neighbourhoods_norm_{}.pkl'.format(file))
 
     # drop ceased
     result = result[result['type'] != 'Ceased grid cells']
@@ -252,7 +279,7 @@ for file in ['shannon', 'unique_langs']:
     #                    'Estonian-inhabited','Somali-inhabited','\nTemporal type',
     #                    'Present every year', 'New grid cells'],
     #          bbox_to_anchor=[0,1.04], loc='upper left')
-    plt.savefig(r'W:\maphel_langtime\plots\grid_trajectory_norm_shannon.pdf', dpi=300,
+    plt.savefig(args['output'] + 'grid_trajectory_norm_shannon.pdf', dpi=300,
                 bbox_inches='tight')
 
 
@@ -263,5 +290,5 @@ for file in ['shannon', 'unique_langs']:
                     ci=99, estimator=np.nanmean, n_boot=3000, palette=palette,
                     legend=False, ax=ax)
     g.set(xlabel='', ylabel='Normalized unique languages')
-    plt.savefig(r'W:\maphel_langtime\plots\grid_trajectory_norm_unique.pdf', dpi=300,
+    plt.savefig(args['output'] + 'grid_trajectory_norm_unique.pdf', dpi=300,
                 bbox_inches='tight')

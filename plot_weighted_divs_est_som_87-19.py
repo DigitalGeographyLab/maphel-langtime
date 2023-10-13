@@ -9,6 +9,25 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get grid file
+ap.add_argument("-d", "--diversity", required=True,
+                help="Path to folder containing diversities in annual grids. For example: /path/to/folder/")
+
+# Get path to input file
+ap.add_argument("-p", "--plotting", required=True,
+                help="Path to plotting ready dataframe file from previous step.")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. This script assumes you have access to FOLK data within Fiona")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # function to calculate spatial distribution and density through the years
 def calc_dens(data, popcol, ycol):
@@ -45,7 +64,7 @@ for i, year in enumerate(list(range(1987,2020))):
     print('[INFO] - Processing year ' + str(year))
 
     # read files in
-    df = gpd.read_file(r'W:\maphel_langtime\geopackage\HMA_langs_famgen_div_{}.gpkg'.format(str(year)))
+    df = gpd.read_file(args['diversity'] + 'HMA_langs_famgen_div_{}.gpkg'.format(str(year)))
     
     # assign year for appending
     df['year'] = year
@@ -104,11 +123,10 @@ for i, year in enumerate(list(range(1987,2020))):
 data = pd.concat(results, ignore_index=True)
 
 # save to disk
-data.to_pickle(r'W:\maphel_langtime\pickles\popweigh_divs.pkl')
-data.to_csv(r'W:\maphel_langtime\pickles\popweigh_divs.csv', sep=';', encoding='utf-8')
+data.to_pickle(args['output'] + 'popweigh_divs.pkl')
 
-# read plotdf
-plotdf = pd.read_pickle(r'W:\maphel_langtime\pickles\normalized.pkl')
+# read ploting ready dataframe from previous step
+plotdf = pd.read_pickle(args['plotting'] + 'language_groups_ready_to_plot.pkl')
 
 # set seaborn theme
 sns.set()
@@ -133,10 +151,9 @@ g = sns.lineplot(x='year', y='score', hue='type', legend=True,palette=palette,
 g.set(ylabel='Shannon entropy (lang. fam.)', xlabel='', ylim=(0, 1.63))
 plt.legend(title='Residential neighbourhood', loc='lower center',
            bbox_to_anchor=[0.20,0.55])
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_popweigh_diversity_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_popweigh_diversity_87-19.pdf', dpi=300,
             bbox_inches='tight')   
-    
- 
+
 # set fontsize for title
 fs=15
 # plot weighted averages of linguistic diversity with normalized diveristies
@@ -165,7 +182,7 @@ plt.legend(title='Residential neighbourhood', bbox_to_anchor=[0.80,0.65],
            loc='lower center', labels=['Estonian-inhabited','Somali-inhabited',
                                       'Foreign-inhabited','Finnish-inhabited',
                                       'Swedish-inhabited','HMA average'])
-fig.savefig(r'W:\maphel_langtime\plots\popweigh_and_norm_diversity_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'popweigh_and_norm_diversity_87-19.pdf', dpi=300,
             bbox_inches='tight')   
     
 
@@ -183,7 +200,7 @@ fig, ax = plt.subplots(figsize=(13,10))
 palette = {'Somali':'C1','Estonian':'C0','HMA avg.':'C2'}
 b = sns.lineplot(data=ls, x='year', y='count', hue='type', style='asva', palette=palette)
 b.set(yscale='log', xlabel='', ylabel='Inhabitants')
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_livingspace_lineplot_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_livingspace_lineplot_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -225,7 +242,7 @@ plt.legend(title='Residential environment', loc='lower center',
            bbox_to_anchor=[0.81,1.81])
 
 # save the figure to disk
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_norm_lineplot_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_norm_lineplot_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -247,7 +264,7 @@ b.set(ylabel='Proportion of Fin/Swe speakers in grid cell', xlabel='')
 plt.legend(title='Residential environment', loc='lower center',
            labels=['Estonian-inhabited', 'Somali-inhabited', 'HMA average'],
            bbox_to_anchor=[0.7,0.79])
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_dens_dist_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_dens_dist_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -277,7 +294,7 @@ g.set(ylabel='Afro-asiatic languages (%)', xlabel='')
 plt.legend(title='Residential environment', loc='lower center',
            labels=['Estonian-inhabited', 'Somali-inhabited', 'HMA average'],
            bbox_to_anchor=[0.35,0.75])
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_lineplot_langfam_prop_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_lineplot_langfam_prop_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -299,7 +316,7 @@ plt.legend(title='Language family', loc='lower center',
            labels=['Altaic','Austro-asiatic','Afro-asiatic',
                    'Tai-Kadai','Austronesian', 'Niger-Congo','Dravidian'],
            bbox_to_anchor=(0.5,0.7))
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_lineplot_lf_per_residential_areas_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_lineplot_lf_per_residential_areas_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -329,7 +346,7 @@ g.set(ylabel='Unique language families (normalized)', xlabel='', ylim=(-0.3,6.5)
 plt.legend(title='Residential environment', loc='lower center',
            labels=['Estonian-inhabited', 'Somali-inhabited', 'HMA average'],
            bbox_to_anchor=[0.70,0.75])
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_lineplot_uniques_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_lineplot_uniques_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -358,7 +375,7 @@ g.set(ylabel='Shannon entropy of language families (normalized)', xlabel='')
 plt.legend(title='Residential environment', loc='lower center',
            labels=['Estonian-inhabited', 'Somali-inhabited', 'HMA average'],
            bbox_to_anchor=[0.70,0.75])
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_lineplot_shannon_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_lineplot_shannon_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -396,7 +413,7 @@ g.set(ylabel='Norm. Shannon entropy (lf)', xlabel='', ylim=(-0.5,2))
 plt.legend(title='Residential environment', loc='lower center',
            labels=['Estonian-inhabited', 'Somali-inhabited', 'HMA average'],
            bbox_to_anchor=[0.70,1.9])
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_lineplot_diversity_87-19.pdf', dpi=300,
+fig.savefig(args['output'] + 'som_est_hma_lineplot_diversity_87-19.pdf', dpi=300,
             bbox_inches='tight')
 
 
@@ -431,119 +448,5 @@ plt.legend(title='Language family', loc='lower center',
            labels=['Indo-European', 'Altaic', 'Austro-Asiatic', 'Afro-Asiatic',
                    'Tai-Kadai', 'Austronesian', 'Niger-Congo', 'Dravidian'],
            bbox_to_anchor=[0.5,0.3])
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_lineplot_langfam_87.19.pdf',
+fig.savefig(args['output'] + 'som_est_hma_lineplot_langfam_87.19.pdf',
             dpi=300, bbox_inches='tight')
-
-
-
-# plot regression of the linguistic diversity markers
-fig, axes = plt.subplots(3, 2, figsize=(14,15))
-axes = axes.flatten()
-
-# set up dictionaries for columns and labels
-divdict = {0:'unique_langs', 1:'unique_fam', 2:'shannon', 3:'fam_shannon',
-           4:'norm_shannon', 5:'norm_fam_shannon'}
-ylabels = {0:'Unique languages', 1:'Unique language families', 2:'Shannon entropy (indv. lang.)',
-           3:'Shannon entropy (lang. fam.)', 4:'Normalized Shannon entropy (indv. lang.)',
-           5:'Normalized Shannon entropy (lang. fam.)'}
-
-# plot regression plots in for loop
-for i, ax in enumerate(axes):
-    
-    # get diversity index
-    div = divdict[i]
-    
-    # loop over dataframes
-    for j, data in enumerate([estdf, somdf, hmadf]):
-        
-        # plot regression
-        g = sns.regplot(data=data, x='year', y=div, ci=99, order=3, n_boot=2000,
-                        robust=False, scatter=False, ax=ax)
-        g.set(ylabel=ylabels[i], xlabel='')
-        
-# define legend and legend location
-plt.legend(title='Residential environment', loc='lower center',
-           labels=['Estonian-inhabited', 'Somali-inhabited', 'HMA average'],
-           bbox_to_anchor=[0.21,1.85])
-
-# save figure to disk
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_div_regplot_87-19.pdf', dpi=300,
-            bbox_inches='tight')
-
-
-
-
-
-# plot robust regression of the linguistic diversity markers
-fig, axes = plt.subplots(3, 2, figsize=(14,15))
-axes = axes.flatten()
-
-# set up dictionaries for columns and labels
-divdict = {0:'unique_langs', 1:'unique_fam', 2:'shannon', 3:'fam_shannon',
-           4:'norm_shannon', 5:'norm_fam_shannon'}
-ylabels = {0:'Unique languages', 1:'Unique language families', 2:'Shannon entropy (indv. lang.)',
-           3:'Shannon entropy (lang. fam.)', 4:'Normalized Shannon entropy (indv. lang.)',
-           5:'Normalized Shannon entropy (lang. fam.)'}
-
-# plot regression plots in for loop
-for i, ax in enumerate(axes):
-    
-    # get diversity index
-    div = divdict[i]
-    
-    # loop over dataframes
-    for j, data in enumerate([estdf, somdf, hmadf]):
-        
-        # plot regression
-        g = sns.regplot(data=data, x='year', y=div, ci=99, order=1, n_boot=100,
-                        robust=True, scatter=False, ax=ax)
-        g.set(ylabel=ylabels[i], xlabel='')
-        
-# define legend and legend location
-plt.legend(title='Residential environment', loc='lower center',
-           labels=['Estonian-inhabited', 'Somali-inhabited', 'HMA average'],
-           bbox_to_anchor=[0.21,1.85])
-
-# save figure to disk
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_robust_regplot_87-19.pdf', dpi=300,
-            bbox_inches='tight')
-
-
-
-
-
-# plot regression of the socioeconomic markers
-fig, axes = plt.subplots(3, 2, figsize=(13,14))
-axes = axes.flatten()
-
-# set up dictionaries for columns and labels
-divdict = {0:'finswe_prop', 1:'hi_ed_prop', 2:'howner_prop', 3:'unemp_prop',
-           4:'avg_earned_income', 5:'income_norm'}
-ylabels = {0:'Finnish/Swedish (%)', 1:'Highly educated (%)', 2:'Owner occupancy (%)',
-           3:'Unemployment (%)', 4:'Average income (€)', 5:'Normalized avg. income'}
-
-# plot regression plots in for loop
-for i, ax in enumerate(axes):
-    
-    # get diversity index
-    div = divdict[i]
-    
-    # loop over dataframes
-    for j, data in enumerate([estdf, somdf, hmadf]):
-        
-        # ensure everything is float
-        data[div] = data[div].astype(float)
-        
-        # plot regression
-        g = sns.regplot(data=data, x='year', y=div, ci=99, order=3,
-                        n_boot=2000, robust=False, scatter=False, ax=ax)
-        g.set(ylabel=ylabels[i], xlabel='')
-        
-# define legend and legend location
-plt.legend(title='Neighbourhood', loc='lower center',
-           labels=['Estonian', 'Somali', 'HMA average'],
-           bbox_to_anchor=[0.8,1.9])
-
-# save figure to disk
-fig.savefig(r'W:\maphel_langtime\plots\som_est_hma_regplot_socioeco_87-19.pdf', dpi=300,
-            bbox_inches='tight')

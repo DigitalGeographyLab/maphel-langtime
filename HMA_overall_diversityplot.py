@@ -13,37 +13,38 @@ import numpy as np
 import gc
 from matplotlib import pyplot as plt
 import seaborn as sns
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get path to input file
+ap.add_argument("-g", "--grid", required=True,
+                help="Path to geopackage file containing 250 m grid covering the HMA.")
+
+# Get path to input file
+ap.add_argument("-lg", "--langgrid", required=True,
+                help="Path to folder containing CSVs with first language information and individual unique ids")
+
+# Get path to input file
+ap.add_argument("-hg", "--homegrid", required=True,
+                help="Path to folder containing CSVs with home locations and individual unique ids")
+
+# Get path to output file
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/. The files will be named: '_langfam_diversity_euref250.pkl'")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # function to count languages in grid and return list of counts
 def langcount(langlist):
     count = Counter(langlist)
     return list(count.values())
 
-# read file with mappings between languages and language families
-print('[INFO] - Reading language mappings...')
-df = pd.read_csv(r'W:\langfamily_mappings.csv')
-wals = pd.read_csv(r'W:\wals_languages.csv')
-
-# simplify data structure by dropping NaN's
-df = df.dropna(subset=['alpha2'])
-wals = wals[['ISO639P3code', 'Family', 'Genus']]
-
-# merge
-df = pd.merge(df, wals, left_on='alpha3-b', right_on='ISO639P3code')
-
-# drop duplicates
-df = df.drop_duplicates(subset=['alpha2'])
-
-# simplify
-df = df[['alpha3-b', 'alpha2', 'lang_name', 'ISO639P3code', 'Family', 'Genus']]
-
-# empty dataframes for annual counts of language families and geni
-famdf = pd.DataFrame()
-gendf = pd.DataFrame()
-
 # read grid in
 print('[INFO] - Reading spatial information...')
-grid = gpd.read_file('W:\\grid\\250m_HMA_greater_rough.gpkg')
+grid = gpd.read_file(args['grid'])
 
 # reduce grid to only HMA
 grid = grid[grid['KUNTA'].isin(['091', '049', '092', '235'])]
@@ -64,9 +65,9 @@ for i in range(1987,2020):
     yr = i
     
     # create year-specific filepaths
-    lpath = 'W:\\language\\harmonized\\' + str(yr) + '_mothertongues.csv'
-    gpath = 'D:\\e01\\custom-made\\henkilo_paikkatiedot_' + str(yr) +'.csv'
-    outpath = 'W:\\language\\spatial\\pickles\\250m\\harmonized\\' + str(yr) + '_langfam_diversity_euref250.pkl'
+    lpath = args['langgrid'] + str(yr) + '_mothertongues.csv'
+    gpath = args['homegrid'] + 'henkilo_paikkatiedot_' + str(yr) +'.csv'
+    outpath = args['output'] + str(yr) + '_langfam_diversity_euref250.pkl'
     
     # read annual datasets in
     langs = pd.read_csv(lpath, sep=',', encoding='utf-8')
@@ -128,7 +129,7 @@ for i in range(1987,2020):
 # create result dataframe
 results = pd.concat(resultlist, ignore_index=True)
 
-# predicted dataframe
+# predicted dataframe from City of Helsinki databases, see article's bibliography for accurate reference
 preds = {'year':[2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2030,2031,
                  2032,2033,2034],
          'natpop':[988662,994050,999435,1003592,1006967,1009633,1012031,1014017,
@@ -143,9 +144,7 @@ preds = pd.DataFrame().from_dict(preds)
 results = pd.concat([results, preds], ignore_index=True)
 
 # save results to disk
-results.to_pickle(r'W:\maphel_langtime\pickles\HMA_overall_diversities.pkl')
-results.to_csv(r'W:\maphel_langtime\pickles\HMA_overall_diversities.csv',
-               sep=';', encoding='utf-8')
+results.to_pickle(args['output'] + 'HMA_overall_diversities.pkl')
 
 # initialize seaborn style
 sns.set()
@@ -159,7 +158,7 @@ plt.axvline(2019, 0.05, 0.96, color='k', linestyle='--')
 plt.yticks(rotation=45)
 plt.ticklabel_format(style='plain', axis='y', useOffset=False)
 plt.legend(labels=['Native', 'Non-native'], loc='lower right')
-plt.savefig(r'W:\maphel_langtime\plots\hma_population_preds.pdf', dpi=300, bbox_inches='tight')
+plt.savefig(args['output'] + 'hma_population_preds.pdf', dpi=300, bbox_inches='tight')
 
 # plot triple stacked plot for figure 1'
 sns.set(font_scale=1.4)
@@ -180,8 +179,7 @@ g.set_ylabel('Unique languages', fontsize=16)
 g = sns.lineplot(x='year', y='unique_fam', color='olivedrab', data=results, ax=ax[2])
 g.set(xlabel='', ylim=(0,14))
 g.set_ylabel('Language families', fontsize=16)
-plt.savefig(r'W:\maphel_langtime\plots\figure1_bcd.pdf', dpi=300, bbox_inches='tight')
-plt.savefig(r'W:\maphel_langtime\plots\figure1_bcd.png', dpi=400, bbox_inches='tight')
+plt.savefig(args['output'] + 'figure1_bcd.pdf', dpi=400, bbox_inches='tight')
 
 
 # plot global shannon
@@ -194,7 +192,7 @@ g = sns.lineplot(x='year', y='unique_langs', color='salmon', data=results, ax=ax
 g.set(ylabel='Unique languages', xlabel='', ylim=(0,160))
 g.set_title('b.', loc='left', fontsize=15)
 
-plt.savefig(r'W:\maphel_langtime\plots\global_shannon_uniques_hma.pdf', dpi=300, bbox_inches='tight')
+plt.savefig(args['output'] + 'global_shannon_uniques_hma.pdf', dpi=300, bbox_inches='tight')
 
 
 # plot the global diversities
@@ -208,4 +206,4 @@ g = sns.lineplot(x='year', y='unique_langs', data=results, ax=axes[0], color='sa
 g.set(xlabel='', ylabel='Languages', ylim=(0,160))
 g = sns.lineplot(x='year', y='unique_fam', data=results, ax=axes[1], color='goldenrod')
 g.set(xlabel='', ylabel='Language families', ylim=(0,14))
-plt.savefig(r'W:\maphel_langtime\plots\afinla_HMA_87-19.pdf', dpi=300, bbox_inches='tight')
+plt.savefig(args['output'] + 'afinla_HMA_87-19.pdf', dpi=300, bbox_inches='tight')

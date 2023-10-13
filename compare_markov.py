@@ -10,13 +10,44 @@ from scipy.special import kl_div, rel_entr
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import argparse
+
+# set up argument parser
+ap = argparse.ArgumentParser()
+
+# Get path to input file
+ap.add_argument("-s", "--somali", required=True,
+                help="Path to input file with markov chain probabilities for Somalis")
+
+# Get path to input file
+ap.add_argument("-e", "--estonian", required=True,
+                help="Path to input file with markov chain probabilities for Estonians")
+
+# Get path to input file
+ap.add_argument("-s", "--finnish", required=True,
+                help="Path to input file with markov chain probabilities for Finns")
+
+# Get path to input file
+ap.add_argument("-s", "--foreign", required=True,
+                help="Path to input file with markov chain probabilities for foreign language speakers")
+
+# Get path to input file
+ap.add_argument("-hp", "--hma", required=True,
+                help="Path to input file with markov chain probabilities for full HMA population")
+
+# Get path to output folder
+ap.add_argument("-o", "--output", required=True,
+                help="Path to output folder. For example: /path/to/folder/")
+
+# parse arguments
+args = vars(ap.parse_args())
 
 # read in population probability matrices
-est = pd.read_pickle(r'W:\maphel_langtime\pickles\markov_probs_estpop_shannon_natbre_k5.pkl')
-som = pd.read_pickle(r'W:\maphel_langtime\pickles\markov_probs_sompop_shannon_natbre_k5.pkl')
-#hma = pd.read_pickle(r'W:\maphel_langtime\pickles\markov_probs_pop_count_shannon_jenks_k5.pkl')
-fin = pd.read_pickle(r'W:\maphel_langtime\pickles\markov_probs_finpop_shannon_natbre_k5.pkl')
-foreign = pd.read_pickle(r'W:\maphel_langtime\pickles\markov_probs_foreign_pop_shannon_natbre_k5.pkl')
+est = pd.read_pickle(args['estonian'])
+som = pd.read_pickle(args['somali'])
+hma = pd.read_pickle(args['hma'])
+fin = pd.read_pickle(args['finnish'])
+foreign = pd.read_pickle(args['foreign'])
 
 # convert dataframes to numpy arrays
 ahma = hma.to_numpy()
@@ -83,7 +114,7 @@ g.set_yticklabels(g.get_yticklabels(), rotation=0, fontsize=9)
 g.set_xticklabels(g.get_xticklabels(), rotation=0, fontsize=9)
 axes[3].set_title('d.', fontsize=18, loc='left')
 
-plt.savefig(r'W:\maphel_langtime\plots\markov_global_comparison_popgroup_shannon_natbre.pdf', dpi=300,
+plt.savefig(args['output'] + 'markov_global_comparison_popgroup_shannon_natbre.pdf', dpi=300,
             bbox_inches='tight')
 
 # get table of similarities
@@ -100,7 +131,7 @@ jsdf3 =  pd.DataFrame(js3, index=['Somali-Foreign', 'Estonian-Foreign','Finnish-
 fig, ax = plt.subplots(figsize=(7,4))
 g = sns.heatmap(jsdf, annot=True, fmt='.3f', square=True, cmap='mako_r',
                 vmin=0, vmax=1, cbar=True, cbar_kws={'shrink':0.8}, ax=ax)
-plt.savefig(r'W:\maphel_langtime\plots\jensen-shannon_distances_hma.pdf', dpi=300,
+plt.savefig(args['output'] + 'jensen-shannon_distances_hma.pdf', dpi=300,
             bbox_inches='tight')
 
 # plot the distance matrix
@@ -112,7 +143,7 @@ ax[0].set_title('a.', loc='left', fontsize=16)
 g = sns.heatmap(jsdf3, annot=True, fmt='.3f', square=True, cmap='mako_r',
                 vmin=0, vmax=1, cbar=True, cbar_kws={'shrink':0.7}, ax=ax[1])
 ax[1].set_title('b.', loc='left', fontsize=16)
-plt.savefig(r'W:\maphel_langtime\plots\jensen-shannon_distances_pop_group_shannon_naive_quint.pdf', dpi=300,
+plt.savefig(args['output'] + 'jensen-shannon_distances_pop_group_shannon_naive_quint.pdf', dpi=300,
             bbox_inches='tight')
 
 # plot global markov comparisons for nat and foreigns as well
@@ -154,5 +185,5 @@ g = sns.heatmap(aest, annot=True, linewidths=.1, ax=axes[3], cbar=True,
 g.set_yticklabels(g.get_yticklabels(), rotation=0, fontsize=9)
 g.set_xticklabels(g.get_xticklabels(), rotation=0, fontsize=9)
 axes[3].set_title('d.', fontsize=14, loc='left')
-plt.savefig(r'W:\maphel_langtime\plots\markov_global_comparison_fiswe.pdf', dpi=300,
+plt.savefig(args['output'] + 'markov_global_comparison_fiswe.pdf', dpi=300,
             bbox_inches='tight')
